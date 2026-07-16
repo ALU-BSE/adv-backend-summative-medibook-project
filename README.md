@@ -60,7 +60,7 @@ Every SQL statement in the application must use **parameterized queries** (`?` p
 
 ## Part C — Controllers & Endpoints
 
-Implement endpoints for the eight operations below. **Designing the API is part of the assessment**: you choose the URL paths, the HTTP methods, and how the endpoints are grouped into controllers and routes — your choices should follow REST conventions and will be marked. The business rules listed are **requirements** — *how* you satisfy them is your design decision, and you will be asked to defend it at the viva.
+Implement endpoints for the operations below. **Designing the API is part of the assessment**: you choose the URL paths, the HTTP methods, and how the endpoints are grouped into controllers and routes — your choices should follow REST conventions and will be marked. The business rules listed are **requirements** — *how* you satisfy them is your design decision, and you will be asked to defend it at the viva.
 
 1. **Basic CRUD** — standard **C**reate, **R**ead (one and all), **U**pdate, and **D**elete operations for patients and for doctors, with sensible validation. (Appointments get their create/delete behaviour from the two operations below — no separate CRUD needed there.)
 
@@ -75,15 +75,12 @@ Implement endpoints for the eight operations below. **Designing the API is part 
    - A cancelled slot becomes bookable by another patient, while the cancellation record is kept for refund history.
    - A cancellation notifies the waitlist (Part E).
 
-4. **Search doctors** — the "read all doctors" operation from item 1, extended with **optional** filters: specialty, name (partial match), maximum consultation fee, and availability on a given date (doctors with at least one free slot that day). Filters must work individually or in any combination, and results must be paginated.
+4. **Doctor statistics** — for a given doctor: revenue collected, upcoming appointment count, appointments per day for the next 7 days, and utilization % against the 12-slot daily cap.
 
-5. **Doctor statistics** — for a given doctor: revenue collected, upcoming appointment count, appointments per day for the next 7 days, and utilization % against the 12-slot daily cap.
+Operations 5 and 6 are where your **advanced SQL** is assessed: the results must be produced by the SQL in your models (joins, aggregates, etc) — not fetched raw and computed in JavaScript.
 
-Operations 6–8 are where your **advanced SQL** is assessed: the results must be produced by the SQL in your models (joins, aggregates, window functions) — not fetched raw and computed in JavaScript.
-
-6. **Doctors report** — every doctor's total appointments and revenue collected, including doctors with zero appointments.
-7. **Top patients report** — patients ranked by total amount spent using a window function; equal spenders share a rank, with no gaps in the numbering.
-8. **Busy days report** — every (doctor, date) where more than 80% of the 12-slot daily capacity is booked.
+5. **Doctors report** — every doctor's total appointments and revenue collected, including doctors with zero appointments.
+6. **Busy days report** — every (doctor, date) where more than 80% of the 12-slot daily capacity is booked.
 
 ### General requirements (all endpoints)
 
@@ -129,18 +126,5 @@ Create a **simple HTML page** (served by your Express app at `GET /feedback`) co
   - `README.md` with: setup steps, `.env.example`, and the short written justifications requested in Parts C, D, and E
 - The app must start with `npm install && npm start` (plus documented MySQL/Redis setup) and tests with `npm test`.
 - A short **viva/demo (10 minutes)** walkthrough.
-
-## Marking Summary
-
-| Part | Focus | Marks |
-|---|---|---|
-| A | Normalization & schema design | 15 |
-| B | Database implementation & project structure | 15 |
-| C | Controllers & endpoints (incl. advanced SQL reports) | 30 |
-| D | `fs` module | 10 |
-| E | Queues & Redis | 15 |
-| F | Unit testing | 10 |
-| G | i18n & l10n feedback page | 5 |
-| **Total** | | **100** (scaled to 30% of final grade) |
 
 **Automatic penalties:** SQL injection vector anywhere in the app (−15), secrets committed to the repo (−5), app does not start per README instructions (−10).
