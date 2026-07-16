@@ -9,7 +9,7 @@
 
 ## Scenario — "MediBook" Clinic Appointment System
 
-A community clinic wants a backend service for booking doctor appointments. Doctors see patients in fixed 30-minute slots during working hours (09:00–17:00), each doctor can handle at most **12 appointments per day**, and the clinic administrator needs reports. You will design the database, build the API, and handle the operational concerns (caching, background jobs, logging, testing).
+A community clinic wants a backend service for booking doctor appointments. Doctors see patients in fixed 30-minute slots during working hours (09:00–17:00), each doctor can handle at most **12 appointments per day**, and the clinic administrator needs reports. You will design the database, build the API, and handle the operational concerns (background jobs, logging, testing).
 
 **Entity limit:** Your database must contain **exactly 3 entities**:
 
@@ -128,3 +128,38 @@ Create a **simple HTML page** (served by your Express app at `GET /feedback`) co
 - A short **viva/demo (10 minutes)** walkthrough.
 
 **Automatic penalties:** SQL injection vector anywhere in the app (−15), secrets committed to the repo (−5), app does not start per README instructions (−10).
+
+
+
+
+
+
+
+# MediBook API Rubric
+
+**Final Assessment — Backend Development · 100 pts · scaled to 30% of final grade**
+
+| Criteria | Exemplary | Proficient | Developing | Needs Improvement | Pts |
+|---|---|---|---|---|---|
+| **Database Design & Normalization** *(Part A)* | Diagram is fully normalized to 3NF. All 3 entities appear with every column and its MySQL data type; PKs and FKs clearly marked; cardinality correct; business-rule constraints (`NOT NULL`, `UNIQUE`, `CHECK`) visible — including the rule that a doctor cannot hold two appointments at the same date/time. **15 to >11.25 pts** | Normalized design with minor omissions — a missing data type, an unmarked key, or one constraint absent; relationships and cardinality mostly correct. **11.25 to >7.5 pts** | Partial normalization (visible redundancy remains) or the diagram omits several types, keys, or constraints; cardinality unclear. **7.5 to >3.75 pts** | Diagram missing, illegible, or essentially the spreadsheet redrawn; not normalized. **3.75 to >0 pts** | **/15** |
+| **Database Implementation & Project Structure** *(Part B)* | `database/schema.sql` runs cleanly on fresh MySQL and matches the diagram exactly; sensible types (`DECIMAL` for money, `DATETIME` for slots); all constraints implemented; `seed.sql` meets the spec (incl. the zero-appointment doctor and the near-cap day). Clean models / controllers / routes structure; every query parameterized; SQL exists only in models. **15 to >11.25 pts** | Scripts run with small gaps — a weak type, one missing constraint, or seed data missing one required case; structure correct with an isolated SQL leak outside models. **11.25 to >7.5 pts** | Script errors, missing FKs, or schema deviating from the diagram; folder structure present but SQL scattered through controllers or routes. **7.5 to >3.75 pts** | `schema.sql` does not run or contradicts the diagram; no meaningful project structure. **3.75 to >0 pts** | **/15** |
+| **Core API: CRUD & REST Design** *(Part C.1, general requirements)* | All patient and doctor CRUD endpoints work with sensible validation; URL paths, HTTP methods, and controller/route grouping follow REST conventions; unknown ids return 404; meaningful 400 messages; central error-handling middleware in place. **8 to >6 pts** | Most endpoints work with minor gaps (a missing 404, a small bug, one non-RESTful route choice). **6 to >4 pts** | Several endpoints missing or buggy; validation partial; error handling ad hoc. **4 to >2 pts** | Major endpoints missing or broken; no REST discipline; no central error handling. **2 to >0 pts** | **/8** |
+| **Business Rules & Critical Thinking** *(Parts C.2–C.3: booking & cancellation)* | All booking rules enforced — future-only, working hours, 30-minute boundary, 12-per-day cap, and no shared slot **even under simultaneous requests**. Refund tiers computed server-side with both boundaries defined; cancellation and refund record succeed or fail together; a cancelled slot becomes rebookable while its record is kept; waitlist notified; correct 409/422 usage. Design decisions defended convincingly at the viva. **13 to >9.75 pts** | Most rules enforced; concurrency only partially handled (e.g., the daily-cap race remains) or one refund boundary undefined; minor status-code slips. **9.75 to >6.5 pts** | Only 2–3 rules enforced; refund computed incorrectly or trusted from the client; cancelled slots stay blocked forever or the record is lost. **6.5 to >3.25 pts** | 0–1 rules enforced; little evidence of deliberate design decisions. **3.25 to >0 pts** | **/13** |
+| **Statistics & Advanced SQL Reports** *(Parts C.4–C.6)* | Doctor statistics (revenue, upcoming count, per-day counts for 7 days, utilization % vs the 12-slot cap) are correct. Both reports are produced by SQL in the models (joins, aggregates); doctors with zero appointments appear in the doctors report; the busy-days threshold is computed correctly against capacity. **9 to >6.75 pts** | Reports mostly correct — one aggregate slip, or zero-appointment doctors missing, or a minor piece computed in JavaScript. **6.75 to >4.5 pts** | Results largely computed in JavaScript instead of SQL, or several figures wrong. **4.5 to >2.25 pts** | Statistics/report operations missing or broken. **2.25 to >0 pts** | **/9** |
+| **`fs` Module: Audit Log** *(Part D)* | Every successful booking and cancellation appended as a JSON line to `logs/audit.log` using async `fs` calls; `logs/` auto-created on first run; a logging failure never fails the user's request; no `*Sync` calls inside request handlers. **10 to >7.5 pts** | Log works with minor slips — an occasional missed event type, or sync usage outside the request path. **7.5 to >5 pts** | Logging partial; `*Sync` calls inside handlers; or a log failure breaks the request. **5 to >2.5 pts** | Audit log absent or broken. **2.5 to >0 pts** | **/10** |
+| **Queues & Redis** *(Part E)* | Fully-booked slot/day leads to a waitlist offer via a Redis-backed queue; a **separate worker process** books the first waitlisted patient when a cancellation frees a slot; failure of that promoted booking is handled so the patient is never lost from both the queue and the table; confirmation jobs enqueued per appointment and processed to the audit log. **15 to >11.25 pts** | Waitlist and worker function, but the promoted-booking failure case is unhandled, or the worker runs inside the web server process; notifications work. **11.25 to >7.5 pts** | A queue exists but promotion is broken or manual; notification jobs missing. **7.5 to >3.75 pts** | No working Redis/queue usage. **3.75 to >0 pts** | **/15** |
+| **Unit Testing** *(Part F)* | At least 6 meaningful tests: refund calculator covers all three tiers **and both exact boundaries** (24h, 48h) using fixed dates; a validation function tested including an edge case; `npm test` runs green with no MySQL or Redis running. **10 to >7.5 pts** | 6 tests present but one boundary missing or an assertion weak. **7.5 to >5 pts** | Fewer than 6 tests, happy-path only, or tests require live services. **5 to >2.5 pts** | Tests absent or failing. **2.5 to >0 pts** | **/10** |
+| **i18n & l10n Feedback Page** *(Part G)* | `/feedback` serves the 5 essay questions as textareas with all visible text loaded from locale files; both languages work via the lang switch; unsupported values fall back to English without crashing; today's date is formatted for the active locale. **5 to >3.75 pts** | Both locales work but a string is hard-coded or the date is not localized. **3.75 to >2.5 pts** | Only English works, or translations are hard-coded into the HTML instead of locale files. **2.5 to >1.25 pts** | Page missing or broken. **1.25 to >0 pts** | **/5** |
+
+**Total: /100**
+
+---
+
+## Automatic penalties (applied after scoring)
+
+| Condition | Effect |
+|---|---|
+| SQL injection vector anywhere in the app | −15 |
+| Secrets (real passwords, `.env`) committed to the repo | −5 |
+| App does not start following the README instructions | −10 |
+| Cannot explain own code at the viva | Academic integrity referral; affected criteria re-scored at Developing or below |
