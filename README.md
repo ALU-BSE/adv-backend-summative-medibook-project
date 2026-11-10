@@ -56,7 +56,7 @@ Use any tool you like (dbdiagram.io, draw.io) and include it in your repository 
     └── routes/        maps URLs and HTTP methods to controllers
 ```
 
-Every SQL statement in the application must use **parameterized queries** (`?` placeholders via `mysql2`). SQL found in a controller or route file loses marks.
+Every SQL statement in the application must use **parameterized queries** (`?` placeholders via `mysql2`). SQL found in a controller or route file loses marks. **Do not use any ORM for this assignment.**
 
 ## Part C — Controllers & Endpoints
 
